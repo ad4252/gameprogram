@@ -1,0 +1,26 @@
+#include <stdio.h>
+#include <conio.h>
+#include <windows.h>
+#define X_MAX 79 //가로(열) 방향의 최대값 
+#define Y_MAX 24 //세로(열) 방향의 최대값 
+void move_arrow_key(char chr,int *x,int *y,int x_b,int y_b);
+void gotoxy(int x, int y);
+int main(void)
+{
+	char key;
+	int x=10,y=5;
+	do
+	{
+		gotoxy(x,y);
+		printf("A");
+		key=getch(); //key를 키보드로 받기. 
+		move_arrow_key(key,&x,&y,X_MAX,Y_MAX); //방금 누른 키가 뭔지 확인하고, 그 키에 따라서 x와 y를 바꿔줘
+	}while(key!=27);
+	return 0;
+}
+
+#정리.
+###1. 이코드의 void move_arrow_key(char chr,int *x,int *y,int x_b,int y_b);는 당연히 함수 지정이며 즉 방향키에 따라 gotoxy로 커서를 이동하게 만드는 코드인것이다.
+###2. 여기서 #include <windows.h> 덕분에 마우스 커서를 말하는 것 같지만 15번쨰 문장인 print문 때문에 문자 출력 커서가 된다.
+###3. 그리고 여기서 key=getch()로 이용해서 키보드로 esc 즉 아스킷 코드로 27이 나올시 반복문을 종료해 프로그램을 마치게 한다.
+###4. 마지막으로 #include <conio.h>가 존재 하는 이유는 getch() 떄문에 사용하는 것이다.
