@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <math.h>
+#include <conio.h>
+#include <windows.h>
+
+int calc_frequency(int octave, int inx);
+void practice_piano(void);
+
+int main(void)
+{
+    printf("1부터 8까지 숫자 키를 누르면\n");
+    printf("각 음의 소리가 출력됩니다.\n\n");
+    printf("1:도 2:레 3:미 4:파 5:솔 6:라 7:시 8:도\n");
+    printf("프로그램 종료는 Esc키 \n");
+    
+    practice_piano();
+    
+    return 0;
+}
+
+void practice_piano(void)
+{
+    int key;
+    int freq;
+
+    while (1)
+    {
+        key = _getch(); // 엔터 없이 키 입력 받기
+
+        // Esc 키(ASCII 코드 27) 입력 시 종료
+        if (key == 27)
+        {
+            printf("\n프로그램을 종료합니다.\n");
+            break;
+        }
+
+        // '1' ~ '8' 키가 눌렸을 때
+        if (key >= '1' && key <= '8')
+        {
+            // 4옥타브 기준으로 frequency 계산 ('1' -> 인덱스 1)
+            freq = calc_frequency(4, key - '0');
+
+            // Beep(주파수(Hz), 지속시간(ms))
+            Beep(freq, 300);
+        }
+    }
+}
+
+int calc_frequency(int octave, int inx)
+{
+    // 도(0), 레(2), 미(4), 파(5), 솔(7), 라(9), 시(11), 높은도(12) 반음 차이
+    int semitones[] = { 0, 2, 4, 5, 7, 9, 11, 12 };
+
+    // 4옥타브 도(C4)의 기준 주파수: 약 261.63 Hz
+    double base_c4 = 261.63;
+
+    // 주파수 계산 공식: f = f_0 \times 2^{(octave - 4) + (semitone / 12)}
+    double freq = base_c4 * pow(2.0, (octave - 4) + (semitones[inx - 1] / 12.0));
+
+    return (int)(freq + 0.5); // 반올림하여 정수 주파수 반환
+}
