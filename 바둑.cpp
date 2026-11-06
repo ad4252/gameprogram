@@ -2,54 +2,60 @@
 #include <stdlib.h>
 #include <time.h>
 #include <conio.h>
+#include <windows.h>
 
-#define BOARD_SIZE 15   // ¹ÙµÏÆÇ Å©±â (15x15)
-#define TIME_LIMIT 30   // ÅÏ´ç Á¦ÇÑ ½Ã°£ (30ÃÊ)
+#define BOARD_SIZE 15   // ë°”ë‘‘íŒ í¬ê¸° (15x15)
+#define TIME_LIMIT 30   // í„´ë‹¹ ì œí•œ ì‹œê°„ (30ì´ˆ)
 
-// °ÔÀÓÆÇ ¹è¿­ (0: ºóÄ­, 1: ÇÃ·¹ÀÌ¾î(Èæ), 2: AI(¹é))
+// ê²Œì„íŒ ë°°ì—´ (0: ë¹ˆì¹¸, 1: í”Œë ˆì´ì–´(í‘), 2: AI(ë°±))
 int board[BOARD_SIZE][BOARD_SIZE] = {0}; 
 int cursor_x = BOARD_SIZE / 2; 
 int cursor_y = BOARD_SIZE / 2; 
-int current_turn = 1; // 1: Èæ(ÇÃ·¹ÀÌ¾î), 2: ¹é(ÄÄÇ»ÅÍ AI)
+int current_turn = 1; // 1: í‘(í”Œë ˆì´ì–´), 2: ë°±(ì»´í“¨í„° AI)
 int game_over = 0;
 int winner = 0;
 
-// ÇÔ¼ö ¿øÇü ¼±¾ğ
+// í•¨ìˆ˜ ì›í˜• ì„ ì–¸
 void display_board(int remain_time);
 void play_game();
 int check_win(int y, int x, int color);
 void ai_turn();
 int evaluate_line_score(int y, int x, int color);
+// í™”ë©´ ê¹œë¹¡ì„ ë°©ì§€ë¥¼ ìœ„í•´ ì»¤ì„œë¥¼ ì¢Œì¸¡ ìƒë‹¨(0,0)ìœ¼ë¡œ ì´ë™ì‹œí‚¤ëŠ” í•¨ìˆ˜
+void move_cursor_top_left() {
+    COORD pos = {0, 0};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), pos);
+}
 
 int main(void)
 {
-    // ³­¼ö ÃÊ±âÈ­ (AIÀÇ ¹«ÀÛÀ§¼ºÀ» À§ÇÔ)
+    // ë‚œìˆ˜ ì´ˆê¸°í™” (AIì˜ ë¬´ì‘ìœ„ì„±ì„ ìœ„í•¨)
     srand((unsigned int)time(NULL));
 
     system("cls");
-    printf("=== ÀÎ°øÁö´É ¿À¸ñ ´ëÀü (Á¦ÇÑ½Ã°£ %dÃÊ) ===\n\n", TIME_LIMIT);
-    printf("Á¶ÀÛ ¹æ¹ı:\n");
-    printf(" - ÀÌµ¿ : W, A, S, D Å°\n");
-    printf(" - Âø¼ö : SPACE (½ºÆäÀÌ½º¹Ù)\n");
-    printf(" - Á¾·á : ESC\n\n");
-    printf("±ÔÄ¢:\n");
-    printf(" - ÇÃ·¹ÀÌ¾î´Â Èæ(¡Ü), ÄÄÇ»ÅÍ AI´Â ¹é(¡Û)ÀÔ´Ï´Ù.\n");
-    printf(" - Á¦ÇÑ½Ã°£ ³»¿¡ µ¹À» µÎÁö ¾ÊÀ¸¸é ÆĞ¹èÇÕ´Ï´Ù.\n\n");
-    printf("¾Æ¹« Å°³ª ´©¸£¸é °ÔÀÓÀÌ ½ÃÀÛµË´Ï´Ù...");
+    printf("=== ì¸ê³µì§€ëŠ¥ ì˜¤ëª© ëŒ€ì „ (ì œí•œì‹œê°„ %dì´ˆ) ===\n\n", TIME_LIMIT);
+    printf("ì¡°ì‘ ë°©ë²•:\n");
+    printf(" - ì´ë™ : W, A, S, D í‚¤\n");
+    printf(" - ì°©ìˆ˜ : SPACE (ìŠ¤í˜ì´ìŠ¤ë°”)\n");
+    printf(" - ì¢…ë£Œ : ESC\n\n");
+    printf("ê·œì¹™:\n");
+    printf(" - í”Œë ˆì´ì–´ëŠ” í‘(â—), ì»´í“¨í„° AIëŠ” ë°±(â—‹)ì…ë‹ˆë‹¤.\n");
+    printf(" - ì œí•œì‹œê°„ ë‚´ì— ëŒì„ ë‘ì§€ ì•Šìœ¼ë©´ íŒ¨ë°°í•©ë‹ˆë‹¤.\n\n");
+    printf("ì•„ë¬´ í‚¤ë‚˜ ëˆ„ë¥´ë©´ ê²Œì„ì´ ì‹œì‘ë©ë‹ˆë‹¤...");
     
     getch(); 
     play_game(); 
 
-    // °ÔÀÓ Á¾·á °á°ú Ãâ·Â
+    // ê²Œì„ ì¢…ë£Œ ê²°ê³¼ ì¶œë ¥
     system("cls");
     if (winner == 1) {
-        printf("\n\nÃàÇÏÇÕ´Ï´Ù! ÇÃ·¹ÀÌ¾î(Èæ)ÀÇ ½Â¸®ÀÔ´Ï´Ù! ??\n");
+        printf("\n\nì¶•í•˜í•©ë‹ˆë‹¤! í”Œë ˆì´ì–´(í‘)ì˜ ìŠ¹ë¦¬ì…ë‹ˆë‹¤! ??\n");
     } else if (winner == 2) {
-        printf("\n\n¾Æ½±½À´Ï´Ù. ÄÄÇ»ÅÍ AI(¹é)ÀÇ ½Â¸®ÀÔ´Ï´Ù. ??\n");
+        printf("\n\nì•„ì‰½ìŠµë‹ˆë‹¤. ì»´í“¨í„° AI(ë°±)ì˜ ìŠ¹ë¦¬ì…ë‹ˆë‹¤. ??\n");
     } else {
-        printf("\n\n°ÔÀÓÀÌ °­Á¦ Á¾·áµÇ¾ú½À´Ï´Ù.\n");
+        printf("\n\nê²Œì„ì´ ê°•ì œ ì¢…ë£Œë˜ì—ˆìŠµë‹ˆë‹¤.\n");
     }
-    printf("¾Æ¹« Å°³ª ´©¸£¸é ÇÁ·Î±×·¥À» Á¾·áÇÕ´Ï´Ù...\n");
+    printf("ì•„ë¬´ í‚¤ë‚˜ ëˆ„ë¥´ë©´ í”„ë¡œê·¸ë¨ì„ ì¢…ë£Œí•©ë‹ˆë‹¤...\n");
     getch();
 
     return 0;
@@ -64,42 +70,42 @@ void play_game()
 
     while (!game_over)
     {
-        // 1. ½Ã°£ ÃÊ°ú Ã¼Å© ¹× Å¸ÀÌ¸Ó °»½Å
+        // 1. ì‹œê°„ ì´ˆê³¼ ì²´í¬ ë° íƒ€ì´ë¨¸ ê°±ì‹ 
         time_t current_time = time(NULL);
         int elapsed = (int)difftime(current_time, turn_start_time);
         int remain_time = TIME_LIMIT - elapsed;
 
-        // ½Ã°£ ÃÊ°ú ½Ã ÆĞ¹è Ã³¸®
+        // ì‹œê°„ ì´ˆê³¼ ì‹œ íŒ¨ë°° ì²˜ë¦¬
         if (remain_time <= 0) {
             game_over = 1;
             winner = (current_turn == 1) ? 2 : 1; 
             break;
         }
 
-        // 1ÃÊ°¡ Áö³¯ ¶§¸¶´Ù È­¸é °»½Å
+        // 1ì´ˆê°€ ì§€ë‚  ë•Œë§ˆë‹¤ í™”ë©´ ê°±ì‹ 
         if (remain_time != last_remain_time) {
             display_board(remain_time);
             last_remain_time = remain_time;
         }
 
-        // 2. ÄÄÇ»ÅÍ(AI) ÅÏ Ã³¸®
+        // 2. ì»´í“¨í„°(AI) í„´ ì²˜ë¦¬
         if (current_turn == 2) {
             ai_turn();
             if (game_over) break;
 
             current_turn = 1;
-            turn_start_time = time(NULL); // ½Ã°£ ÃÊ±âÈ­
+            turn_start_time = time(NULL); // ì‹œê°„ ì´ˆê¸°í™”
             last_remain_time = TIME_LIMIT;
             display_board(TIME_LIMIT);
-            continue; // AI°¡ µÎ¸é ¹Ù·Î ´ÙÀ½ ·çÇÁ·Î
+            continue; // AIê°€ ë‘ë©´ ë°”ë¡œ ë‹¤ìŒ ë£¨í”„ë¡œ
         }
 
-        // 3. ÇÃ·¹ÀÌ¾î(Èæ) Å°º¸µå ÀÔ·Â Ã³¸®
+        // 3. í”Œë ˆì´ì–´(í‘) í‚¤ë³´ë“œ ì…ë ¥ ì²˜ë¦¬
         if (kbhit()) {
             char key = getch();
             int is_moved = 0; 
 
-            if (key == 27) break; // ESC Á¾·á
+            if (key == 27) break; // ESC ì¢…ë£Œ
 
             switch (key) {
                 case 'w': case 'W': 
@@ -111,18 +117,18 @@ void play_game()
                 case 'd': case 'D': 
                     if (cursor_x < BOARD_SIZE - 1) cursor_x++; is_moved = 1; break;
                 
-                case 32: // ½ºÆäÀÌ½º¹Ù (Âø¼ö)
+                case 32: // ìŠ¤í˜ì´ìŠ¤ë°” (ì°©ìˆ˜)
                     if (board[cursor_y][cursor_x] == 0) {
-                        board[cursor_y][cursor_x] = 1; // Èæµ¹ ³õ±â
+                        board[cursor_y][cursor_x] = 1; // í‘ëŒ ë†“ê¸°
                         
-                        // ½Â¸® Ã¼Å©
+                        // ìŠ¹ë¦¬ ì²´í¬
                         if (check_win(cursor_y, cursor_x, 1)) {
                             game_over = 1;
                             winner = 1;
                             break;
                         }
                         
-                        current_turn = 2; // AI·Î ÅÏ ³Ñ±â±â
+                        current_turn = 2; // AIë¡œ í„´ ë„˜ê¸°ê¸°
                         turn_start_time = time(NULL); 
                         last_remain_time = TIME_LIMIT;
                         is_moved = 1;
@@ -137,52 +143,52 @@ void play_game()
     }
 }
 
-// 5¸ñ ½Â¸® ÆÇÁ¤ ÇÔ¼ö (°¡·Î, ¼¼·Î, ´ë°¢¼± °Ë»ç)
+// 5ëª© ìŠ¹ë¦¬ íŒì • í•¨ìˆ˜ (ê°€ë¡œ, ì„¸ë¡œ, ëŒ€ê°ì„  ê²€ì‚¬)
 int check_win(int y, int x, int color)
 {
-    // Å½»öÇÒ 4¹æÇâ (°¡·Î, ¼¼·Î, ¿ìÇÏ´ë°¢¼±, ¿ì»ó´ë°¢¼±)
+    // íƒìƒ‰í•  4ë°©í–¥ (ê°€ë¡œ, ì„¸ë¡œ, ìš°í•˜ëŒ€ê°ì„ , ìš°ìƒëŒ€ê°ì„ )
     int dy[] = {0, 1, 1, -1};
     int dx[] = {1, 0, 1, 1};
 
     for (int i = 0; i < 4; i++) {
-        int count = 1; // ¹æ±İ ³õÀº µ¹ 1°³ Æ÷ÇÔ
+        int count = 1; // ë°©ê¸ˆ ë†“ì€ ëŒ 1ê°œ í¬í•¨
         
-        // Á¤¹æÇâ Å½»ö
+        // ì •ë°©í–¥ íƒìƒ‰
         int ny = y + dy[i], nx = x + dx[i];
         while (ny >= 0 && ny < BOARD_SIZE && nx >= 0 && nx < BOARD_SIZE && board[ny][nx] == color) {
             count++; ny += dy[i]; nx += dx[i];
         }
         
-        // ¿ª¹æÇâ Å½»ö
+        // ì—­ë°©í–¥ íƒìƒ‰
         ny = y - dy[i], nx = x - dx[i];
         while (ny >= 0 && ny < BOARD_SIZE && nx >= 0 && nx < BOARD_SIZE && board[ny][nx] == color) {
             count++; ny -= dy[i]; nx -= dx[i];
         }
 
-        // 5°³°¡ ¿¬¼ÓµÇ¸é ½Â¸®
+        // 5ê°œê°€ ì—°ì†ë˜ë©´ ìŠ¹ë¦¬
         if (count >= 5) return 1;
     }
     return 0;
 }
 
-// ¿À¸ñ AI (°¡Àå Á¡¼ö°¡ ³ôÀº À§Ä¡¸¦ Ã£¾Æ µ¹À» ³õÀ½)
+// ì˜¤ëª© AI (ê°€ì¥ ì ìˆ˜ê°€ ë†’ì€ ìœ„ì¹˜ë¥¼ ì°¾ì•„ ëŒì„ ë†“ìŒ)
 void ai_turn()
 {
     int best_score = -1;
     int best_y = -1;
     int best_x = -1;
 
-    // ¸ğµç ºóÄ­À» Å½»öÇÏ¿© ÃÖÀûÀÇ À§Ä¡ Á¡¼ö °è»ê
+    // ëª¨ë“  ë¹ˆì¹¸ì„ íƒìƒ‰í•˜ì—¬ ìµœì ì˜ ìœ„ì¹˜ ì ìˆ˜ ê³„ì‚°
     for (int y = 0; y < BOARD_SIZE; y++) {
         for (int x = 0; x < BOARD_SIZE; x++) {
             if (board[y][x] == 0) {
-                // °ø°İ Á¡¼ö(ÀÚ½ÅÀÌ µÎ¾úÀ» ¶§) + ¹æ¾î Á¡¼ö(»ó´ë°¡ µÎ¾úÀ» ¶§)
+                // ê³µê²© ì ìˆ˜(ìì‹ ì´ ë‘ì—ˆì„ ë•Œ) + ë°©ì–´ ì ìˆ˜(ìƒëŒ€ê°€ ë‘ì—ˆì„ ë•Œ)
                 int score_attack = evaluate_line_score(y, x, 2);
                 int score_defense = evaluate_line_score(y, x, 1);
                 
                 int total_score = score_attack + score_defense;
                 
-                // ¶È°°Àº Á¡¼öÀÏ °æ¿ì °¡²û ´Ù¸¥ À§Ä¡¿¡ µÎµµ·Ï ·£´ı¼º Ãß°¡
+                // ë˜‘ê°™ì€ ì ìˆ˜ì¼ ê²½ìš° ê°€ë” ë‹¤ë¥¸ ìœ„ì¹˜ì— ë‘ë„ë¡ ëœë¤ì„± ì¶”ê°€
                 total_score += rand() % 5; 
 
                 if (total_score > best_score) {
@@ -194,7 +200,7 @@ void ai_turn()
         }
     }
 
-    // ÃÖÀûÀÇ À§Ä¡¿¡ ¹éµ¹(2) Âø¼ö
+    // ìµœì ì˜ ìœ„ì¹˜ì— ë°±ëŒ(2) ì°©ìˆ˜
     if (best_y != -1 && best_x != -1) {
         board[best_y][best_x] = 2;
         
@@ -205,7 +211,7 @@ void ai_turn()
     }
 }
 
-// AIÀÇ µÎ³ú ¿ªÇÒ (Æ¯Á¤ À§Ä¡¿¡ µÎ¾úÀ» ¶§ÀÇ °¡Ä¡ Á¡¼ö °è»ê)
+// AIì˜ ë‘ë‡Œ ì—­í•  (íŠ¹ì • ìœ„ì¹˜ì— ë‘ì—ˆì„ ë•Œì˜ ê°€ì¹˜ ì ìˆ˜ ê³„ì‚°)
 int evaluate_line_score(int y, int x, int color)
 {
     int score = 0;
@@ -216,52 +222,53 @@ int evaluate_line_score(int y, int x, int color)
         int count = 1;
         int open_ends = 0;
 
-        // Á¤¹æÇâ
+        // ì •ë°©í–¥
         int ny = y + dy[i], nx = x + dx[i];
         while (ny >= 0 && ny < BOARD_SIZE && nx >= 0 && nx < BOARD_SIZE && board[ny][nx] == color) {
             count++; ny += dy[i]; nx += dx[i];
         }
         if (ny >= 0 && ny < BOARD_SIZE && nx >= 0 && nx < BOARD_SIZE && board[ny][nx] == 0) open_ends++;
 
-        // ¿ª¹æÇâ
+        // ì—­ë°©í–¥
         ny = y - dy[i], nx = x - dx[i];
         while (ny >= 0 && ny < BOARD_SIZE && nx >= 0 && nx < BOARD_SIZE && board[ny][nx] == color) {
             count++; ny -= dy[i]; nx -= dx[i];
         }
         if (ny >= 0 && ny < BOARD_SIZE && nx >= 0 && nx < BOARD_SIZE && board[ny][nx] == 0) open_ends++;
 
-        // ¿¬¼ÓµÈ µ¹ °³¼ö¿Í ¿­¸° °ø°£¿¡ µû¸¥ Á¡¼ö ºÎ¿©
-        if (count >= 5) score += 100000;              // ½Â¸® È®Á¤ (5¸ñ)
-        else if (count == 4 && open_ends == 2) score += 10000; // ¾çÂÊ ¶Õ¸° 4¸ñ (ÇÊ½Â)
-        else if (count == 4 && open_ends == 1) score += 1000;  // ÇÑÂÊ ¸·Èù 4¸ñ
-        else if (count == 3 && open_ends == 2) score += 1000;  // ¾çÂÊ ¶Õ¸° 3¸ñ
-        else if (count == 3 && open_ends == 1) score += 100;   // ÇÑÂÊ ¸·Èù 3¸ñ
-        else if (count == 2 && open_ends == 2) score += 100;   // ¾çÂÊ ¶Õ¸° 2¸ñ
+        // ì—°ì†ëœ ëŒ ê°œìˆ˜ì™€ ì—´ë¦° ê³µê°„ì— ë”°ë¥¸ ì ìˆ˜ ë¶€ì—¬
+        if (count >= 5) score += 100000;              // ìŠ¹ë¦¬ í™•ì • (5ëª©)
+        else if (count == 4 && open_ends == 2) score += 10000; // ì–‘ìª½ ëš«ë¦° 4ëª© (í•„ìŠ¹)
+        else if (count == 4 && open_ends == 1) score += 1000;  // í•œìª½ ë§‰íŒ 4ëª©
+        else if (count == 3 && open_ends == 2) score += 1000;  // ì–‘ìª½ ëš«ë¦° 3ëª©
+        else if (count == 3 && open_ends == 1) score += 100;   // í•œìª½ ë§‰íŒ 3ëª©
+        else if (count == 2 && open_ends == 2) score += 100;   // ì–‘ìª½ ëš«ë¦° 2ëª©
     }
     return score;
 }
 
-// È­¸é Ãâ·Â ÇÔ¼ö (³²Àº ½Ã°£ Ç¥½Ã)
+// í™”ë©´ ì¶œë ¥ í•¨ìˆ˜ (ë‚¨ì€ ì‹œê°„ í‘œì‹œ)
 void display_board(int remain_time)
 {
-    system("cls");
+    // system("cls"); // <--- ê¸°ì¡´ì— í™”ë©´ì„ ì§€ìš°ë˜ ì´ ì½”ë“œë¥¼ ì‚­ì œ(ë˜ëŠ” ì£¼ì„ ì²˜ë¦¬)í•©ë‹ˆë‹¤.
+    move_cursor_top_left(); // <--- ëŒ€ì‹  ì»¤ì„œë¥¼ ë§¨ ìœ„ë¡œ ì˜¬ë¦½ë‹ˆë‹¤!
     
-    printf("=== ½Ç½Ã°£ ÀÎ°øÁö´É ¿À¸ñ ===\n");
-    printf("ÅÏ´ç Á¦ÇÑ ½Ã°£: %dÃÊ ³²À½  [ %s ]\n", remain_time, current_turn == 1 ? "´ç½Å(¡Ü)ÀÇ Â÷·Ê" : "AI(¡Û) »ı°¢Áß...");
-    printf("============================\n");
+    printf("=== ì‹¤ì‹œê°„ ì¸ê³µì§€ëŠ¥ ì˜¤ëª© ===                          \n");
+    printf("í„´ë‹¹ ì œí•œ ì‹œê°„: %2dì´ˆ ë‚¨ìŒ  [ %-15s ]       \n", remain_time, current_turn == 1 ? "ë‹¹ì‹ (â—)ì˜ ì°¨ë¡€" : "AI(â—‹) ìƒê°ì¤‘...");
+    printf("============================                          \n");
 
     for (int y = 0; y < BOARD_SIZE; y++) {
         for (int x = 0; x < BOARD_SIZE; x++) {
             
-            // ÇÃ·¹ÀÌ¾î Â÷·ÊÀÏ ¶§¸¸ Ä¿¼­ Ç¥½Ã
+            // í”Œë ˆì´ì–´ ì°¨ë¡€ì¼ ë•Œë§Œ ì»¤ì„œ í‘œì‹œ
             if (current_turn == 1 && x == cursor_x && y == cursor_y) {
-                printf("¢Ã"); 
+                printf("â–£"); 
             } 
-            else if (board[y][x] == 1) printf("¡Ü"); // ÇÃ·¹ÀÌ¾î
-            else if (board[y][x] == 2) printf("¡Û"); // AI
-            else printf("¦«");                       // ºóÄ­
+            else if (board[y][x] == 1) printf("â—"); // í”Œë ˆì´ì–´
+            else if (board[y][x] == 2) printf("â—‹"); // AI
+            else printf("â”¼");                       // ë¹ˆì¹¸
         }
         printf("\n");
     }
-    printf("\n(W/A/S/D: ÀÌµ¿, SPACE: Âø¼ö, ESC: Á¾·á)\n");
+    printf("\n(W/A/S/D: ì´ë™, SPACE: ì°©ìˆ˜, ESC: ì¢…ë£Œ)               \n");
 }
